@@ -6,6 +6,10 @@ spring:
     url: jdbc:postgresql://localhost:5432/commercehub
     username: commercehub
     password: ${DB_PASSWORD:commercehub_dev}
+#    hikari:
+#      maximum-pool-size: 10
+#      minimum-idle: 2
+#      connection-timeout: 30000
 
   jpa:
     hibernate:

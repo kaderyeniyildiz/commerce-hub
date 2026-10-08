@@ -13,6 +13,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "users")
 @Getter
+@Setter
 @NoArgsConstructor
 public class User extends BaseEntityAudit{
 
@@ -35,4 +36,7 @@ public class User extends BaseEntityAudit{
     @Column(nullable = false)
     private UserStatus status;
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

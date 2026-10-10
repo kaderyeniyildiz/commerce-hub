@@ -17,23 +17,23 @@ import lombok.Setter;
 @NoArgsConstructor
 public class User extends BaseEntityAudit{
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 200)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 200)
     private String lastName;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 200)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 200)
     private String password;
 
-    @Column
+    @Column(length = 50)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private UserStatus status;
 
     public void setPassword(String password) {

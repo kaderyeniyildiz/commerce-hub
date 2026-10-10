@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class CommerceHubApplication {
 
 	public static void main(String[] args) {
-		System.out.println("Test test");
 		SpringApplication.run(CommerceHubApplication.class, args);
 	}
 

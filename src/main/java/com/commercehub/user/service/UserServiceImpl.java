@@ -3,7 +3,9 @@ package com.commercehub.user.service;
 import com.commercehub.user.dto.UserDTO;
 import com.commercehub.user.entity.User;
 import com.commercehub.user.exception.UserNotFoundException;
+import com.commercehub.user.exception.InvalidCurrentPasswordException;
 import com.commercehub.user.repository.UserRepository;
+import com.commercehub.user.request.ChangePasswordRequest;
 import com.commercehub.user.request.UserCreateRequest;
 import com.commercehub.user.request.UserUpdateRequest;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO getUser(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(String.valueOf(id)));
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         return modelMapper.map(user, UserDTO.class);
 
     }
@@ -45,7 +47,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO update(UserUpdateRequest request, Long id) {
-        User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         modelMapper.map(request, user);
         User save = userRepository.save(user);
         return modelMapper.map(save, UserDTO.class);
@@ -54,8 +56,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public void changePassword(Long id, ChangePasswordRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new InvalidCurrentPasswordException();
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }

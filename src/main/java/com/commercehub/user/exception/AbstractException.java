@@ -4,12 +4,21 @@ import org.springframework.http.HttpStatus;
 
 public abstract class AbstractException extends RuntimeException {
 
-    public abstract HttpStatus getHttpStatus();
+    private final HttpStatus httpStatus;
+    private final String errorCode;
 
-    //public abstract String getExceptionCode();
+    protected AbstractException(HttpStatus httpStatus, String errorCode, String message) {
+        super(message);
+        this.httpStatus = httpStatus;
+        this.errorCode = errorCode;
+    }
 
-    public abstract String getMessage();
+    public final HttpStatus getHttpStatus() {
+        return httpStatus;
+    }
 
-   // public abstract String[] getMessageArgs();
+    public final String getErrorCode() {
+        return errorCode;
+    }
 
 }

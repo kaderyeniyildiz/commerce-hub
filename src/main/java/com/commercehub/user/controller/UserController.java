@@ -3,6 +3,7 @@ package com.commercehub.user.controller;
 import com.commercehub.user.dto.UserDTO;
 import com.commercehub.user.request.UserCreateRequest;
 import com.commercehub.user.request.UserUpdateRequest;
+import com.commercehub.user.request.ChangePasswordRequest;
 import com.commercehub.user.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Tag(description = "User api", name = "User")
 @RestController
@@ -54,6 +53,13 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/change-password")
+    public ResponseEntity<Void> changePassword(@PathVariable Long id,
+                                               @RequestBody @Valid ChangePasswordRequest request) {
+        userService.changePassword(id, request);
         return ResponseEntity.noContent().build();
     }
 }

@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO getUser(Long id) {
-        User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         return modelMapper.map(user, UserDTO.class);
 
     }
@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO update(UserUpdateRequest request, Long id) {
-        User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         modelMapper.map(request, user);
         User save = userRepository.save(user);
         return modelMapper.map(save, UserDTO.class);
@@ -56,14 +56,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
     }
 
     @Override
     public void changePassword(Long id, ChangePasswordRequest request) {
-        User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new InvalidCurrentPasswordException();
         }

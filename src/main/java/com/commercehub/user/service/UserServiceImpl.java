@@ -2,11 +2,13 @@ package com.commercehub.user.service;
 
 import com.commercehub.user.dto.UserDTO;
 import com.commercehub.user.entity.User;
+import com.commercehub.user.exception.EmailNotExist;
 import com.commercehub.user.exception.UserNotFoundException;
 import com.commercehub.user.exception.InvalidCurrentPasswordException;
 import com.commercehub.user.repository.UserRepository;
 import com.commercehub.user.request.ChangePasswordRequest;
 import com.commercehub.user.request.UserCreateRequest;
+import com.commercehub.user.request.UserCriteriaRequest;
 import com.commercehub.user.request.UserUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -46,7 +48,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO update(UserUpdateRequest request, Long id) {
+    public UserDTO update(Long id, UserUpdateRequest request) {
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         modelMapper.map(request, user);
         User save = userRepository.save(user);
@@ -70,5 +72,22 @@ public class UserServiceImpl implements UserService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    @Override
+    public UserDTO getByEmail(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EmailNotExist(email));
+        return modelMapper.map(user, UserDTO.class);
+    }
+
+    @Override
+    public Page<UserDTO> search(UserCriteriaRequest request, Pageable pageable) {
+        Page<User> users = userRepository.search(request.getFirstName(),
+                request.getLastName(),
+                request.getEmail(),
+                request.getPhoneNumber(),
+                request.getStatus(),
+                pageable);
+        return users.map(user -> modelMapper.map(user, UserDTO.class));
     }
 }

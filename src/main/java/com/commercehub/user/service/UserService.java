@@ -2,6 +2,7 @@ package com.commercehub.user.service;
 
 import com.commercehub.user.dto.UserDTO;
 import com.commercehub.user.request.UserCreateRequest;
+import com.commercehub.user.request.UserCriteriaRequest;
 import com.commercehub.user.request.UserUpdateRequest;
 import com.commercehub.user.request.ChangePasswordRequest;
 import org.springframework.data.domain.Page;
@@ -16,9 +17,14 @@ public interface UserService {
 
     UserDTO save(UserCreateRequest request);
 
-    UserDTO update(UserUpdateRequest request, Long id);
+    UserDTO update(Long id, UserUpdateRequest request);
 
     void delete(Long id);
 
     void changePassword(Long id, ChangePasswordRequest request);
+
+    UserDTO getByEmail(String email);
+
+    Page<UserDTO> search(UserCriteriaRequest request, Pageable pageable);
+
 }

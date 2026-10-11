@@ -2,6 +2,7 @@ package com.commercehub.user.controller;
 
 import com.commercehub.user.dto.UserDTO;
 import com.commercehub.user.request.UserCreateRequest;
+import com.commercehub.user.request.UserCriteriaRequest;
 import com.commercehub.user.request.UserUpdateRequest;
 import com.commercehub.user.request.ChangePasswordRequest;
 import com.commercehub.user.service.UserService;
@@ -46,8 +47,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> update(@RequestBody @Valid UserUpdateRequest request, @PathVariable Long id) {
-        return ResponseEntity.ok(userService.update(request, id));
+    public ResponseEntity<UserDTO> update(@PathVariable Long id, @RequestBody @Valid UserUpdateRequest request) {
+        return ResponseEntity.ok(userService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -61,5 +62,16 @@ public class UserController {
                                                @RequestBody @Valid ChangePasswordRequest request) {
         userService.changePassword(id, request);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(userService.getByEmail(email));
+
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<Page<UserDTO>> search(@RequestBody @Valid UserCriteriaRequest request, Pageable pageable) {
+        return ResponseEntity.ok(userService.search(request, pageable));
     }
 }

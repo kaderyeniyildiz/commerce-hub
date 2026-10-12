@@ -11,20 +11,20 @@ import org.springframework.data.domain.Pageable;
 
 public interface UserService {
 
-    UserDTO getUser(Long id);
+    UserDTO getUserById(Long id);
 
     Page<UserDTO> getAllUsers(Pageable pageable);
 
-    UserDTO save(UserCreateRequest request);
+    UserDTO createUser(UserCreateRequest request);
 
-    UserDTO update(Long id, UserUpdateRequest request);
+    UserDTO updateUser(Long id, UserUpdateRequest request);
 
-    void delete(Long id);
+    void deleteUser(Long id);
 
     void changePassword(Long id, ChangePasswordRequest request);
 
-    UserDTO getByEmail(String email);
+    UserDTO getUserByEmail(String email);
 
-    Page<UserDTO> search(UserCriteriaRequest request, Pageable pageable);
+    Page<UserDTO> searchUsers(UserCriteriaRequest request, Pageable pageable);
 
 }

@@ -14,7 +14,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_phone_number", columnList = "phone_number"),
-        @Index(name = "idx_user_created_at", columnList = "createdAt")
+        @Index(name = "idx_user_created_at", columnList = "created_at")
 })
 @Getter
 @Setter
@@ -30,10 +30,10 @@ public class User extends BaseEntityAudit {
     @Column(nullable = false, unique = true, length = 200)
     private String email;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 72)
     private String password;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)

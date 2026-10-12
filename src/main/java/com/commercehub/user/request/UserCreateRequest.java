@@ -27,7 +27,7 @@ public class UserCreateRequest {
     private String email;
 
     @NotBlank
-    @Size(max = 200)
+    @Size(max = 72)
     private String password;
 
     @Size(max = 20)

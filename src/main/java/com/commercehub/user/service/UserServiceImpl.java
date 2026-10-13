@@ -19,13 +19,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -49,7 +47,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public UserDTO createUser(UserCreateRequest request) {
         ensureEmailAvailable(request.getEmail(), null);
 
@@ -62,7 +59,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public UserDTO updateUser(Long id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
                                   .orElseThrow(() -> new UserNotFoundException(id));
@@ -75,7 +71,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                                   .orElseThrow(() -> new UserNotFoundException(id));
@@ -83,7 +78,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public void changePassword(Long id, ChangePasswordRequest request) {
         User user = userRepository.findById(id)
                                   .orElseThrow(() -> new UserNotFoundException(id));
@@ -94,7 +88,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        //userRepository.save(user);
+        userRepository.save(user);
     }
 
     @Override

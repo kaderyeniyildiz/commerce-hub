@@ -15,6 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final ModelMapper modelMapper;
 
     @Override
+    @Cacheable(cacheNames = "usersById", key = "#id")
     public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                                   .orElseThrow(() -> new UserNotFoundException(id));
@@ -43,7 +47,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<UserDTO> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable)
-                             .map((this::toDto));
+                             .map(this::toDto);
     }
 
     @Override
@@ -59,10 +63,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "usersById", key = "#id"),
+            @CacheEvict(cacheNames = "usersByEmail", allEntries = true)
+    })
     public UserDTO updateUser(Long id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
                                   .orElseThrow(() -> new UserNotFoundException(id));
-
         ensureEmailAvailable(request.getEmail(), user.getId());
 
         modelMapper.map(request, user);
@@ -70,7 +77,12 @@ public class UserServiceImpl implements UserService {
         return toDto(savedUser);
     }
 
+
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "usersById", key = "#id"),
+            @CacheEvict(cacheNames = "usersByEmail", allEntries = true)
+    })
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                                   .orElseThrow(() -> new UserNotFoundException(id));
@@ -92,6 +104,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(cacheNames = "usersByEmail", key = "#email")
     public UserDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                                   .orElseThrow(() -> new EmailNotFoundException(email));

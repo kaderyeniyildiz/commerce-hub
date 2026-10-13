@@ -19,6 +19,14 @@ spring:
       hibernate:
         format_sql: true
 
+  cache:
+    type: caffeine
+    cache-names:
+      - usersById
+      - usersByEmail
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
+
 # about spring actuator health,info
 management:
   endpoints:

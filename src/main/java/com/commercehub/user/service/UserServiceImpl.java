@@ -6,6 +6,7 @@ import com.commercehub.user.exception.EmailAlreadyExistsException;
 import com.commercehub.user.exception.EmailNotFoundException;
 import com.commercehub.user.exception.UserNotFoundException;
 import com.commercehub.user.exception.InvalidCurrentPasswordException;
+import com.commercehub.user.kafka.producer.UserEventProducer;
 import com.commercehub.user.repository.UserRepository;
 import com.commercehub.user.request.ChangePasswordRequest;
 import com.commercehub.user.request.UserCreateRequest;
@@ -34,6 +35,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final UserEventProducer userEventProducer;
 
     @Override
     @Cacheable(cacheNames = "usersById", key = "#id")
@@ -59,6 +61,9 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         User savedUser = userRepository.save(user);
+
+        userEventProducer.sendUserCreatedEvent(savedUser.getId(), user.getEmail());
+
         return toDto(savedUser);
     }
 
@@ -87,6 +92,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                                   .orElseThrow(() -> new UserNotFoundException(id));
         userRepository.delete(user);
+
+        userEventProducer.sendUserDeletedEvent(user.getId());
     }
 
     @Override
@@ -95,7 +102,7 @@ public class UserServiceImpl implements UserService {
                                   .orElseThrow(() -> new UserNotFoundException(id));
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            LOGGER.warn("Invalid current password for user id {}", id);
+            LOGGER.warn("Invalid current password for user id: {}", id);
             throw new InvalidCurrentPasswordException();
         }
 

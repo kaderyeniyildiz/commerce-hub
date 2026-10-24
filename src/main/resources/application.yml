@@ -19,15 +19,19 @@ spring:
     url: jdbc:postgresql://localhost:5432/commercehub
     username: ${DB_USERNAME:commercehub}
     password: ${DB_PASSWORD:commercehub_dev}
-#    hikari:
-#      maximum-pool-size: 10
-#      minimum-idle: 2
-#      connection-timeout: 30000
+    connection-fetch: lazy
+    hikari:
+      maximum-pool-size: 1
+      # minimum-idle: 2
+      #connection-timeout: 30000
 
+  sql:
+    init:
+      mode: always
   jpa:
     hibernate:
-     ddl-auto: update
-    show-sql: true
+     ddl-auto: none
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -45,7 +49,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
 #        include: "*"
   endpoint:
     health:

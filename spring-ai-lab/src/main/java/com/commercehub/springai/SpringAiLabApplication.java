@@ -1,14 +1,12 @@
-package com.commercehub;
+package com.commercehub.springai;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CommerceHubApplication {
+public class SpringAiLabApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(CommerceHubApplication.class, args);
-		System.out.println("Hello world");
+		SpringApplication.run(SpringAiLabApplication.class, args);
 	}
-
 }

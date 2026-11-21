@@ -16,6 +16,13 @@
 	<properties>
 		<java.version>25</java.version>
 	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 	<modules>
 		<module>user-service</module>
 		<module>java-core-lab</module>

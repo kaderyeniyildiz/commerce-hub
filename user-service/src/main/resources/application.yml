@@ -1,6 +1,6 @@
 spring:
   application:
-    name: commercehub
+    name: user-service
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -25,13 +25,13 @@ spring:
       # minimum-idle: 2
       #connection-timeout: 30000
 
-  sql:
-    init:
-      mode: always
+#  sql:
+#    init:
+#      mode: always
   jpa:
     hibernate:
-     ddl-auto: none
-    show-sql: false
+     ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         format_sql: true

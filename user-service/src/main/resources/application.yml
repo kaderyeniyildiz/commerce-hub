@@ -2,7 +2,7 @@ spring:
   application:
     name: user-service
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -16,7 +16,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/commercehub
+    url: jdbc:postgresql://localhost:5433/commercehub
     username: ${DB_USERNAME:commercehub}
     password: ${DB_PASSWORD:commercehub_dev}
     connection-fetch: lazy

@@ -127,3 +127,34 @@ docker-ps-all:
 # Remove container
 docker-rm:
 	docker rm example-container
+
+# ==========================
+# Docker Container Registries
+# ==========================
+
+# Create and run container from image
+# Build user-service Docker image
+# If you have already built the image, you don't need to do it again as shown above.
+.PHONY: build
+build-dockerhub:
+	docker image build -f Dockerfile -t user-service ..
+
+# Have to authenticate to dockerhub and create repo first:
+# https://docs.docker.com/engine/reference/commandline/login/
+.PHONY: push-dockerhub
+push-dockerhub:
+	docker tag user-service kaderyeniyildiz/user-service # defaults to latest
+	docker push kaderyeniyildiz/user-service
+
+	docker tag user-service kaderyeniyildiz/user-service:1.0
+	docker push kaderyeniyildiz/user-service:1.0
+
+# Have to authenticate to ghcr.io first
+# https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry
+.PHONY: push-github-packages
+push-github-packages:
+	docker tag user-service ghcr.io/kaderyeniyildiz/user-service # defaults to latest
+	docker push ghcr.io/kaderyeniyildiz/user-service
+
+	docker tag user-service ghcr.io/kaderyeniyildiz/user-service:1.0 # defaults to latest
+	docker push ghcr.io/kaderyeniyildiz/user-service:1.0

@@ -1,11 +1,19 @@
 
-.PHONY: postgres kafka kafka-ui user-service \
-        start-infra stop-infra docker-build docker-up docker-down
+.PHONY: network postgres kafka kafka-ui \
+        user-service-build user-service \
+        start-infra stop-infra docker-rm docker-rmi\
+        logs ps clean
+
+network:
+	docker network inspect commercehub-network >/dev/null 2>&1 || \
+	docker network create commercehub-network
 
 # PostgreSQL
 postgres:
 	docker run -d \
 		--name postgres \
+		--network commercehub-network \
+		--restart unless-stopped \
 		-e POSTGRES_DB=commercehub \
 		-e POSTGRES_USER=commercehub \
 		-e POSTGRES_PASSWORD=commercehub_dev \
@@ -18,6 +26,7 @@ kafka:
 	docker run -d \
 		--name kafka \
 		--network commercehub-network \
+		--restart unless-stopped \
 		-p 9092:9092 \
 		-e KAFKA_NODE_ID=1 \
 		-e KAFKA_PROCESS_ROLES=broker,controller \
@@ -30,29 +39,22 @@ kafka:
 		-e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
 		-e KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1 \
 		-e KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1 \
-		apache/kafka:latest
+		apache/kafka:4.1.1
 
 # Kafka UI
 kafka-ui:
 	docker run -d \
 		--name kafka-ui \
 		--network commercehub-network \
+		--restart unless-stopped \
 		-p 8081:8080 \
 		-e KAFKA_CLUSTERS_0_NAME=local \
 		-e KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092 \
 		provectuslabs/kafka-ui:latest
 
-# Start existing infrastructure containers
-start-infra:
-	docker start postgres kafka kafka-ui
-
-# Stop infrastructure containers
-stop-infra:
-	docker stop user-service kafka-ui kafka postgres
-
 # Build user-service Docker image
 user-service-build:
-	docker image build -f Dockerfile -t user-service:1.0 ..
+	docker image build -f Dockerfile -t user-service:1.0.0 ..
 
 # Run user-service container
 user-service:
@@ -60,24 +62,72 @@ user-service:
 		--name user-service \
 		--network commercehub-network \
 		-p 8080:8080 \
-		-e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5433/commercehub \
+		-e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/commercehub \
 		-e SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092 \
-		user-service:1.0
+		user-service:1.0.0
 
-# Build image and run Spring Boot container
-# user-service:
-# 	docker image build -f Dockerfile -t user-service:1.0 .. && \
-# 	docker run -d \
-# 		--name user-service \
-# 		-p 8080:8080 \
-# 		user-service:1.0
+# Start existing infrastructure containers
+start-infra:
+	docker start postgres kafka kafka-ui user-service
 
-# Docker Compose commands (for future use)
-docker-up:
+# Stop infrastructure containers
+stop-infra:
+	docker stop user-service kafka-ui kafka postgres
+
+# Remove containers
+docker-rm:
+	-docker container rm -f user-service
+	-docker container rm -f kafka-ui
+	-docker container rm -f kafka
+	-docker container rm -f postgres
+# 	-docker network rm commercehub-network
+
+# Remove CommerceHub Docker images
+docker-rmi:
+	-docker image rm -f user-service:1.0.0
+	-docker image rm -f postgres:19
+	-docker image rm -f apache/kafka:4.1.1
+	-docker image rm -f provectuslabs/kafka-ui:latest
+
+# ==========================
+# DOCKER COMPOSE COMMANDS
+# ==========================
+
+.PHONY: compose-build compose-up compose-up-build \
+        compose-down compose-ps compose-restart \
+        compose-logs compose-logs-user
+
+# Build all Docker images
+compose-build:
+	docker compose build
+
+# Start all containers
+compose-up:
 	docker compose up -d
 
-docker-down:
+# Build images and start all containers
+compose-up-build:
+	docker compose up -d --build
+
+# Stop and remove containers (preserve volumes)
+compose-down:
 	docker compose down
+
+# Show container status
+compose-ps:
+	docker compose ps
+
+# Restart all containers
+compose-restart:
+	docker compose restart
+
+# Follow logs from all services
+compose-logs:
+	docker compose logs -f
+
+# Follow User Service logs
+compose-logs-user:
+	docker compose logs -f user-service
 
 # ==========================
 # Docker Image Commands
@@ -92,41 +142,30 @@ docker-images:
 	docker images
 
 # Remove image
-docker-rmi:
-	docker rmi example:1.0
-
+# docker-rmi:
+# 	docker rmi example:1.0
 
 # ==========================
 # Docker Container Commands
 # ==========================
 
 # Create and run container from image
-docker-run:
-	docker run -d --name example-container example:1.0
+# docker run -d --name example-container example:1.0
 
 # Stop container
-docker-stop:
-	docker stop example-container
+# docker stop example-container
 
 # Start existing container
-docker-start:
-	docker start example-container
+# docker start example-container
 
 # Restart container
-docker-restart:
-	docker restart example-container
+# docker restart example-container
 
 # List running containers
-docker-ps:
-	docker ps
+# docker ps
 
 # List all containers
-docker-ps-all:
-	docker ps -a
-
-# Remove container
-docker-rm:
-	docker rm example-container
+# docker ps -a
 
 # ==========================
 # Docker Container Registries
@@ -149,6 +188,9 @@ push-dockerhub:
 	docker tag user-service kaderyeniyildiz/user-service:1.0
 	docker push kaderyeniyildiz/user-service:1.0
 
+	docker tag user-service:1.0.0 kaderyeniyildiz/user-service:1.0.0
+	docker push kaderyeniyildiz/user-service:1.0.0
+
 # Have to authenticate to ghcr.io first
 # https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry
 .PHONY: push-github-packages
@@ -158,3 +200,6 @@ push-github-packages:
 
 	docker tag user-service ghcr.io/kaderyeniyildiz/user-service:1.0 # defaults to latest
 	docker push ghcr.io/kaderyeniyildiz/user-service:1.0
+
+	docker tag user-service ghcr.io/kaderyeniyildiz/user-service:1.0.0 # defaults to latest
+	docker push ghcr.io/kaderyeniyildiz/user-service:1.0.0

@@ -1,16 +1,15 @@
 
 services:
-
   # PostgreSQL
   postgres:
     image: postgres:19
     container_name: postgres
     environment:
       POSTGRES_DB: commercehub
-      POSTGRES_USER: commercehub
-      POSTGRES_PASSWORD: commercehub_dev
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - commercehub_postgres_data:/var/lib/postgresql
     networks:
@@ -27,7 +26,7 @@ services:
     image: apache/kafka:4.1.1
     container_name: kafka
     ports:
-      - "9092:9092"
+      - "127.0.0.1:9092:9092"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -49,7 +48,7 @@ services:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     ports:
-      - "8081:8080"
+      - "127.0.0.1:8081:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
@@ -67,7 +66,7 @@ services:
     image: user-service:1.0.0
     container_name: user-service
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/commercehub
       DB_USERNAME: commercehub
@@ -80,10 +79,18 @@ services:
         condition: service_started
     networks:
       - commercehub-network
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
     restart: unless-stopped
 
 volumes:
   commercehub_postgres_data:
+    name: commercehub_postgres_data
 
 networks:
   commercehub-network:

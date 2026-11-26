@@ -167,6 +167,12 @@ docker-images:
 # List all containers
 # docker ps -a
 
+# docker exec user-service whoami
+
+# docker network list
+
+#docker compose config
+
 # ==========================
 # Docker Container Registries
 # ==========================
@@ -203,3 +209,47 @@ push-github-packages:
 
 	docker tag user-service ghcr.io/kaderyeniyildiz/user-service:1.0.0 # defaults to latest
 	docker push ghcr.io/kaderyeniyildiz/user-service:1.0.0
+
+
+# ==========================
+# Docker Container Security
+# ==========================
+.PHONY: docker-security-scan
+docker-security-scan:
+	trivy image --severity HIGH,CRITICAL user-service:1.0.0
+
+#Docker image security check and analize
+# docker scout quickview user-service:1.0.0 #https://docs.docker.com/scout/?utm_source=chatgpt.com
+# trivy image user-service:1.0.0 #https://trivy.dev/?utm_source=chatgpt.com
+# Snyk #https://snyk.io/?utm_source=chatgpt.com
+# https://www.chainguard.dev/ #https://www.chainguard.dev/docs/open-source/wolfi?utm_source=chatgpt.com (sample small image)
+
+
+# ==========================
+# Docker COMMAND Help
+# ==========================
+# docker --help
+# docker image --help
+   # docker image history user-service:1.0.0
+   # docker image inspect user-service:1.0.0
+   # docker image prune
+   # docker image ls
+   # docker image rm user-service:1.0.0
+   # docker image ls | grep postgres
+
+# docker container --help
+   # docker container logs user-service -f
+   # docker container inspect user-service
+   # docker container prune
+   # docker container ls
+
+# docker volume --help
+   # docker volume create my-volume
+   # docker volume ls
+   # docker volume inspect commercehub_postgres_data
+
+# docker network --help
+   # docker network ls
+   # docker network connect commercehub-network user-service
+   # docker network inspect 4fb84a5552d8
+   # docker network disconnect commercehub-network user-service

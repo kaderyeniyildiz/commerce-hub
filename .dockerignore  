@@ -1,8 +1,7 @@
+
 .git
 .idea
 .vscode
-
-**/target
+**/target/
 **/.DS_Store
-
-*.log
+**/logs/

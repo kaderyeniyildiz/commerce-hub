@@ -16,7 +16,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/commercehub
+    url: jdbc:postgresql://localhost:5433/commercehub
     username: ${DB_USERNAME:commercehub}
     password: ${DB_PASSWORD:commercehub_dev}
     connection-fetch: lazy

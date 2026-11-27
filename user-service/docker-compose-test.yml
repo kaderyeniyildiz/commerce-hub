@@ -1,0 +1,9 @@
+
+services:
+  user-service:
+    command:
+      - mvn
+      - -pl
+      - user-service
+      - -am
+      - test

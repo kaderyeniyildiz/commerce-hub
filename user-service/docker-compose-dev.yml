@@ -1,0 +1,29 @@
+
+services:
+  user-service:
+    build:
+      context: ..
+      dockerfile: user-service/Dockerfile.dev
+
+    image: user-service:dev
+
+    command: mvn -f user-service/pom.xml spring-boot:run
+
+    volumes:
+      # Local CommerceHub source code
+      - type: bind
+        source: ..
+        target: /workspace
+
+      # Cache Maven dependencies
+      - commercehub_maven_data:/root/.m2
+
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+
+    # Maven needs to write build output and cache files
+    read_only: false
+
+volumes:
+  commercehub_maven_data:
+    name: commercehub_maven_data

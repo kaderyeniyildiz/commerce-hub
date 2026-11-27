@@ -1,0 +1,12 @@
+
+services:
+  user-service:
+    ports:
+      - "127.0.0.1:5005:5005"
+
+    command:
+      - mvn
+      - -Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      - -f
+      - user-service/pom.xml
+      - spring-boot:run

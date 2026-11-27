@@ -23,6 +23,24 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<!-- Override transitive dependency versions to fix known security vulnerabilities. -->
+	<dependencyManagement>
+		<dependencies>
+			<!-- LZ4 security update -->
+			<dependency>
+				<groupId>at.yawk.lz4</groupId>
+				<artifactId>lz4-java</artifactId>
+				<version>1.11.4</version>
+			</dependency>
+
+			<!-- Snappy security update -->
+			<dependency>
+				<groupId>org.xerial.snappy</groupId>
+				<artifactId>snappy-java</artifactId>
+				<version>1.1.10.9</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<modules>
 		<module>user-service</module>
 		<module>java-core-lab</module>

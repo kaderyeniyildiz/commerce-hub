@@ -254,3 +254,19 @@ docker-security-scan:
    # docker network inspect 4fb84a5552d8
    # docker network disconnect commercehub-network user-service
 
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose-dev.yml \
+  up -d --build
+
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose-dev.yml \
+  -f docker-compose-debug.yml \
+  up -d --build user-service
+
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose-dev.yml \
+  -f docker-compose-test.yml \
+  run --rm --no-deps user-service

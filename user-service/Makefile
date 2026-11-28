@@ -1,3 +1,8 @@
+# Load environment variables
+ifneq (,$(wildcard .env))
+include .env
+export DB_USERNAME DB_PASSWORD
+endif
 
 .PHONY: network postgres kafka kafka-ui \
         user-service-build user-service \
@@ -5,27 +10,27 @@
         logs ps clean
 
 network:
-	docker network inspect commercehub-network >/dev/null 2>&1 || \
-	docker network create commercehub-network
+	docker network inspect devlab-network >/dev/null 2>&1 || \
+	docker network create devlab-network
 
 # PostgreSQL
 postgres:
 	docker run -d \
 		--name postgres \
-		--network commercehub-network \
+		--network devlab-network \
 		--restart unless-stopped \
-		-e POSTGRES_DB=commercehub \
-		-e POSTGRES_USER=commercehub \
-		-e POSTGRES_PASSWORD=commercehub_dev \
+		-e POSTGRES_DB=devlab \
+		-e POSTGRES_USER \
+		-e POSTGRES_PASSWORD \
 		-p 5433:5432 \
-		-v commercehub_postgres_data:/var/lib/postgresql \
+		-v devlab_postgres_data:/var/lib/postgresql \
 		postgres:19
-# docker network create commercehub-network
+# docker network create devlab-network
 # Kafka
 kafka:
 	docker run -d \
 		--name kafka \
-		--network commercehub-network \
+		--network devlab-network \
 		--restart unless-stopped \
 		-p 9092:9092 \
 		-e KAFKA_NODE_ID=1 \
@@ -45,7 +50,7 @@ kafka:
 kafka-ui:
 	docker run -d \
 		--name kafka-ui \
-		--network commercehub-network \
+		--network devlab-network \
 		--restart unless-stopped \
 		-p 8081:8080 \
 		-e KAFKA_CLUSTERS_0_NAME=local \
@@ -60,9 +65,12 @@ user-service-build:
 user-service:
 	docker run -d \
 		--name user-service \
-		--network commercehub-network \
+		--network devlab-network \
 		-p 8080:8080 \
-		-e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/commercehub \
+		-e SPRING_PROFILES_ACTIVE=dev \
+		-e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/devlab \
+		-e DB_USERNAME \
+		-e DB_PASSWORD \
 		-e SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092 \
 		user-service:1.0.0
 
@@ -80,9 +88,9 @@ docker-rm:
 	-docker container rm -f kafka-ui
 	-docker container rm -f kafka
 	-docker container rm -f postgres
-# 	-docker network rm commercehub-network
+# 	-docker network rm devlab-network
 
-# Remove CommerceHub Docker images
+# Remove DevLab Docker images
 docker-rmi:
 	-docker image rm -f user-service:1.0.0
 	-docker image rm -f postgres:19
@@ -246,27 +254,35 @@ docker-security-scan:
 # docker volume --help
    # docker volume create my-volume
    # docker volume ls
-   # docker volume inspect commercehub_postgres_data
+   # docker volume inspect devlab_postgres_data
 
 # docker network --help
    # docker network ls
-   # docker network connect commercehub-network user-service
+   # docker network connect devlab-network user-service
    # docker network inspect 4fb84a5552d8
-   # docker network disconnect commercehub-network user-service
+   # docker network disconnect devlab-network user-service
 
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose-dev.yml \
-  up -d --build
+.PHONY: dev debug test
 
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose-dev.yml \
-  -f docker-compose-debug.yml \
-  up -d --build user-service
+# Start development environment
+dev:
+	docker compose \
+		-f docker-compose.yml \
+		-f docker-compose-dev.yml \
+		up -d --build
 
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose-dev.yml \
-  -f docker-compose-test.yml \
-  run --rm --no-deps user-service
+# Start development environment with remote debugging
+debug:
+	docker compose \
+		-f docker-compose.yml \
+		-f docker-compose-dev.yml \
+		-f docker-compose-debug.yml \
+		up -d --build user-service
+
+# Run tests inside Docker
+test:
+	docker compose \
+		-f docker-compose.yml \
+		-f docker-compose-dev.yml \
+		-f docker-compose-test.yml \
+		run --rm --no-deps user-service

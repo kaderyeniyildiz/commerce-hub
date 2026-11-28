@@ -11,10 +11,37 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  # 1. Detect changes related to User Service
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      user-service: ${{ steps.filter.outputs.user-service }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Filter changed files
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            user-service:
+              - 'user-service/**'
+              - 'pom.xml'
+              - '.github/workflows/user-service-ci.yml'
+
+  # 2. Build, Test, Scan and Push
   build-test-scan-push:
     name: Build, Test, Scan and Push
+    needs: changes
+    if: needs.changes.outputs.user-service == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -79,3 +106,28 @@ jobs:
 
           docker tag user-service:ci ${{ vars.DOCKERHUB_USERNAME }}/user-service:latest
           docker push ${{ vars.DOCKERHUB_USERNAME }}/user-service:latest
+
+  # 3. Stable required check for GitHub Ruleset
+  ci:
+    name: CI
+    needs:
+      - changes
+      - build-test-scan-push
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify CI result
+        run: |
+          if [[ "${{ needs.changes.result }}" != "success" ]]; then
+            echo "Change detection failed."
+            exit 1
+          fi
+
+          if [[ "${{ needs.build-test-scan-push.result }}" != "success" && \
+                "${{ needs.build-test-scan-push.result }}" != "skipped" ]]; then
+            echo "User Service CI failed."
+            exit 1
+          fi
+
+          echo "CI passed."

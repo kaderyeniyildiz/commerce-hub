@@ -10,13 +10,13 @@ services:
     command: mvn -f user-service/pom.xml spring-boot:run
 
     volumes:
-      # Local CommerceHub source code
+      # Local DevLab source code
       - type: bind
         source: ..
         target: /workspace
 
       # Cache Maven dependencies
-      - commercehub_maven_data:/root/.m2
+      - devlab_maven_data:/root/.m2
 
     environment:
       SPRING_DEVTOOLS_RESTART_ENABLED: "true"
@@ -25,5 +25,5 @@ services:
     read_only: false
 
 volumes:
-  commercehub_maven_data:
-    name: commercehub_maven_data
+  devlab_maven_data:
+    name: devlab_maven_data

@@ -1,8 +1,13 @@
+
 spring:
   application:
     name: user-service
+
+  profiles:
+    default: local
+
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -15,19 +20,9 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
-  datasource:
-    url: jdbc:postgresql://localhost:5433/commercehub
-    username: ${DB_USERNAME:commercehub}
-    password: ${DB_PASSWORD:commercehub_dev}
-    connection-fetch: lazy
-    hikari:
-      maximum-pool-size: 1
-      # minimum-idle: 2
-      #connection-timeout: 30000
-
   jpa:
     hibernate:
-     ddl-auto: update
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -41,17 +36,29 @@ spring:
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=10m
 
-# about spring actuator health,info
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics
-#        include: "*"
   endpoint:
     health:
       show-details: when_authorized
-#      show-details: always
 
 server:
   port: 8080
+
+logging:
+  level:
+    root: INFO
+
+    # Kafka
+    org.apache.kafka: WARN
+    org.springframework.kafka: INFO
+
+    # Hibernate
+    org.hibernate.SQL: INFO
+    org.hibernate.orm.jdbc.bind: WARN
+
+    # Connection pool
+    com.zaxxer.hikari: WARN

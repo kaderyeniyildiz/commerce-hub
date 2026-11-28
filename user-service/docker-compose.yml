@@ -5,17 +5,17 @@ services:
     image: postgres:19
     container_name: postgres
     environment:
-      POSTGRES_DB: commercehub
+      POSTGRES_DB: devlab
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "127.0.0.1:5433:5432"
     volumes:
-      - commercehub_postgres_data:/var/lib/postgresql
+      - devlab_postgres_data:/var/lib/postgresql
     networks:
-      - commercehub-network
+      - devlab-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U commercehub -d commercehub"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,7 +40,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     networks:
-      - commercehub-network
+      - devlab-network
     restart: unless-stopped
 
   # Kafka UI
@@ -55,7 +55,7 @@ services:
     depends_on:
       - kafka
     networks:
-      - commercehub-network
+      - devlab-network
     restart: unless-stopped
 
   # User Service
@@ -68,9 +68,9 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/commercehub
-      DB_USERNAME: commercehub
-      DB_PASSWORD: commercehub_dev
+      SPRING_PROFILES_ACTIVE: dev
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on:
       postgres:
@@ -78,7 +78,7 @@ services:
       kafka:
         condition: service_started
     networks:
-      - commercehub-network
+      - devlab-network
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -89,10 +89,10 @@ services:
     restart: unless-stopped
 
 volumes:
-  commercehub_postgres_data:
-    name: commercehub_postgres_data
+  devlab_postgres_data:
+    name: devlab_postgres_data
 
 networks:
-  commercehub-network:
-    name: commercehub-network
+  devlab-network:
+    name: devlab-network
     driver: bridge

@@ -12,14 +12,16 @@ COPY . .
 # Build user-service and required Maven modules
 RUN mvn -pl user-service -am clean package -DskipTests
 
+# Compile Docker healthcheck
+RUN mkdir -p /app/healthcheck && \
+    javac -d /app/healthcheck \
+    user-service/docker/healthcheck/Healthcheck.java && \
+    find /app/healthcheck -type f
 
 # ==========================================
 # Stage 2: Runtime
 # ==========================================
 FROM eclipse-temurin:25-jre
-
-# Runtime stage from chainguard
-#FROM cgr.dev/chainguard/jre:openjdk-25
 
 WORKDIR /app
 
@@ -29,9 +31,8 @@ RUN useradd --system --create-home spring
 # Copy the generated Spring Boot JAR
 COPY --from=build /app/user-service/target/*.jar app.jar
 
-#from chainguard
-#COPY --from=build --chown=65532:65532 \
-#    /app/user-service/target/*.jar /app/app.jar
+# Copy healthcheck class
+COPY --from=build /app/healthcheck /app/healthcheck
 
 # Run application as non-root user
 USER spring

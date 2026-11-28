@@ -1,0 +1,132 @@
+
+services:
+  postgres:
+    image: postgres:19
+    environment:
+      POSTGRES_DB: devlab
+      POSTGRES_USER_FILE: /run/secrets/db_username
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_username
+      - db_password
+    ports:
+      - target: 5432
+        published: 5433
+        protocol: tcp
+        mode: ingress
+    volumes:
+      - devlab_postgres_data:/var/lib/postgresql
+    networks:
+      devlab-network:
+        aliases:
+          - postgres
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'pg_isready -U "$$(cat /run/secrets/db_username)" -d "$${POSTGRES_DB}"'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  kafka:
+    image: apache/kafka:4.1.1
+    ports:
+      - target: 9092
+        published: 9092
+        protocol: tcp
+        mode: ingress
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: EXTERNAL://:9092,INTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:9092,INTERNAL://kafka:29092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      devlab-network:
+        aliases:
+          - kafka
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - target: 8080
+        published: 8081
+        protocol: tcp
+        mode: ingress
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    networks:
+      - devlab-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  user-service:
+    image: kaderyeniyildiz/user-service:latest
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: ingress
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/devlab
+    secrets:
+      - source: db_username
+        target: DB_USERNAME
+      - source: db_password
+        target: DB_PASSWORD
+    networks:
+      - devlab-network
+    healthcheck:
+      test:
+        - CMD
+        - java
+        - -cp
+        - /app/healthcheck
+        - com.devlab.userservice.healthcheck.Healthcheck
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+
+volumes:
+  devlab_postgres_data:
+    name: devlab_postgres_data
+
+networks:
+  devlab-network:
+    driver: overlay
+    attachable: true
+
+secrets:
+  db_username:
+    external: true
+  db_password:
+    external: true

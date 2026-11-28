@@ -262,6 +262,9 @@ docker-security-scan:
    # docker network inspect 4fb84a5552d8
    # docker network disconnect devlab-network user-service
 
+# ==========================
+# Docker COMMAND Help
+# ==========================
 .PHONY: dev debug test
 
 # Start development environment
@@ -286,3 +289,137 @@ test:
 		-f docker-compose-dev.yml \
 		-f docker-compose-test.yml \
 		run --rm --no-deps user-service
+
+########################
+
+# ==========================
+# Docker Swarm Configuration
+# ==========================
+
+SHELL := /bin/bash
+
+STACK_NAME := devlab
+COMPOSE_FILE := docker-compose-swarm.yml
+USER_SERVICE := $(STACK_NAME)_user-service
+
+# ==========================
+# PHONY
+# ==========================
+
+.PHONY: help swarm-init deploy stack-status stack-ps stack-remove \
+        service-ps secrets-create secrets-list secrets-remove \
+        logs logs-tail logs-follow container-id container-logs \
+        container-inspect container-env healthcheck healthcheck-status
+
+# ==========================
+# Docker COMMAND Help
+# ==========================
+
+help:
+	@echo "Docker Swarm Commands"
+	@echo ""
+	@echo "Swarm:"
+	@echo "  make swarm-init"
+	@echo "  make deploy"
+	@echo "  make stack-status"
+	@echo "  make stack-ps"
+	@echo "  make service-ps"
+	@echo "  make stack-remove"
+	@echo ""
+	@echo "Secrets:"
+	@echo "  make secrets-create"
+	@echo "  make secrets-list"
+	@echo "  make secrets-remove"
+	@echo ""
+	@echo "Logs:"
+	@echo "  make logs"
+	@echo "  make logs-tail"
+	@echo "  make logs-follow"
+	@echo ""
+	@echo "Container:"
+	@echo "  make container-id"
+	@echo "  make container-logs"
+	@echo "  make container-inspect"
+	@echo "  make container-env"
+	@echo ""
+	@echo "Healthcheck:"
+	@echo "  make healthcheck"
+	@echo "  make healthcheck-status"
+
+# ==========================
+# Docker Swarm
+# ==========================
+
+swarm-init:
+	docker swarm init
+
+deploy:
+	docker stack deploy -c $(COMPOSE_FILE) $(STACK_NAME)
+
+stack-status:
+	docker stack services $(STACK_NAME)
+
+stack-ps:
+	docker stack ps $(STACK_NAME)
+
+stack-remove:
+	docker stack rm $(STACK_NAME)
+
+service-ps:
+	docker service ps $(USER_SERVICE)
+
+# ==========================
+# Docker Secrets
+# ==========================
+
+secrets-create:
+	set -a; source .env; set +a; \
+	printf '%s' "$$DB_USERNAME" | docker secret create db_username -; \
+	printf '%s' "$$DB_PASSWORD" | docker secret create db_password -
+
+secrets-list:
+	docker secret ls
+
+secrets-remove:
+	docker secret rm db_username db_password
+
+# ==========================
+# Service Logs
+# ==========================
+
+logs:
+	docker service logs $(USER_SERVICE)
+
+logs-tail:
+	docker service logs --tail 100 $(USER_SERVICE)
+
+logs-follow:
+	docker service logs -f $(USER_SERVICE)
+
+# ==========================
+# Container Operations
+# ==========================
+
+container-id:
+	@docker ps --filter name=$(USER_SERVICE) --format '{{.ID}}' | head -n 1
+
+container-logs:
+	@docker logs $$(docker ps --filter name=$(USER_SERVICE) --format '{{.ID}}' | head -n 1)
+
+container-inspect:
+	@docker inspect $$(docker ps --filter name=$(USER_SERVICE) --format '{{.ID}}' | head -n 1)
+
+container-env:
+	@docker exec $$(docker ps --filter name=$(USER_SERVICE) --format '{{.ID}}' | head -n 1) printenv
+
+# ==========================
+# Healthcheck
+# ==========================
+
+healthcheck:
+	@docker inspect $$(docker ps --filter name=$(USER_SERVICE) --format '{{.ID}}' | head -n 1) --format '{{json .State.Health.Log}}'
+
+healthcheck-status:
+	@docker inspect $$(docker ps --filter name=$(USER_SERVICE) --format '{{.ID}}' | head -n 1) --format '{{.State.Health.Status}}'
+#docker inspect <container_id> --format '{{json .State.Health.Log}}'
+#docker inspect <container_id> --format '{{json .State.Health.Status}}'

@@ -76,7 +76,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                                   .orElseThrow(() -> new UserNotFoundException(id));
         ensureEmailAvailable(request.getEmail(), user.getId());
-        LOGGER.info("CommerceHub User Service updated");
+        LOGGER.info("CommerceHub User Service updated test");
         modelMapper.map(request, user);
         User savedUser = userRepository.save(user);
         return toDto(savedUser);
